@@ -25,20 +25,6 @@ func NewPostsController(postsSrv PostsService) *PostsController {
 	return &PostsController{postsSrv: postsSrv}
 }
 
-type formType string
-
-const (
-	userForm     formType = "user"
-	locationForm formType = "location"
-	postForm     formType = "post"
-	nullForm     formType = ""
-)
-
-const (
-	formValue = "type"
-	pathValue = "post_id"
-)
-
 func (c *PostsController) CreatePostHandler(r *http.Request) (any, error) {
 	var request dto.CreatePostRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -57,15 +43,15 @@ func (c *PostsController) CreatePostHandler(r *http.Request) (any, error) {
 }
 
 func (c *PostsController) GetPosts(r *http.Request) (any, error) {
-	switch formType(r.FormValue(formValue)) {
-	case userForm:
+	switch web.FormType(r.FormValue(web.FormValue)) {
+	case web.UserForm:
 		return c.GetPostsByUserId(r)
-	case locationForm:
+	case web.LocationForm:
 		return c.GetPostsByLocation(r)
-	case postForm, nullForm:
+	case web.PostForm, web.NullForm:
 		return c.GetPostByPostId(r)
 	default:
-		return nil, errors.ErrInvalidPostType
+		return nil, errors.ErrInvalidFormType
 	}
 }
 
@@ -103,7 +89,7 @@ func (c *PostsController) GetPostByPostId(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	request.PostId = r.PathValue(pathValue)
+	request.PostId = r.PathValue(web.PostPathValue)
 
 	user, err := web.GetUserFromCtx(r.Context())
 	if err != nil {
@@ -122,7 +108,7 @@ func (c *PostsController) UpdatePostById(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	request.PostId = r.PathValue(pathValue)
+	request.PostId = r.PathValue(web.PostPathValue)
 
 	user, err := web.GetUserFromCtx(r.Context())
 	if err != nil {
@@ -140,7 +126,7 @@ func (c *PostsController) DeletePostById(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	request.PostId = r.PathValue(pathValue)
+	request.PostId = r.PathValue(web.PostPathValue)
 
 	user, err := web.GetUserFromCtx(r.Context())
 	if err != nil {
