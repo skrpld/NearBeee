@@ -19,8 +19,6 @@ import (
 // TODO:
 //  redis
 //  kafka?
-//  messages с mongo начать делать
-//  создать воркеров и пул работ для распараллеливания
 //  проверка широты\долготы
 
 func main() {
@@ -53,9 +51,10 @@ func main() {
 		return
 	}
 
-	repo := repository.NewNearBeeeRepository(postgresDB, mongoDB)
+	postgresRepo := repository.NewPostgresRepository(postgresDB)
+	mongodbRepo := repository.NewMongodbRepository(mongoDB)
 
-	server, err := servers.NewHttpServer(cfg.HttpServerConfig, repo, zapLogger)
+	server, err := servers.NewHttpServer(cfg.HttpServerConfig, postgresRepo, mongodbRepo, zapLogger)
 	if err != nil {
 		zapLogger.Error("servers.NewNearBeeeServer", logger.Error(err))
 		return

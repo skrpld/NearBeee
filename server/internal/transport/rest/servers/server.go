@@ -24,19 +24,19 @@ type HttpServer struct {
 	logger logger.Logger
 }
 
-func NewHttpServer(cfg HttpServerConfig, repo *repository.NearBeeeRepository, logger logger.Logger) (*HttpServer, error) {
+func NewHttpServer(cfg HttpServerConfig, postgresRepo *repository.PostgresRepository, mongodbRepo *repository.MongodbRepository, logger logger.Logger) (*HttpServer, error) {
 	mainMux := http.NewServeMux()
 
-	//TODO: будем делить repo на постгре+монго - предусмотреть
-
-	authRouter, authSrv := routers.NewAuthRouter(repo, cfg.Secret)
-	postsRouter := routers.NewPostsRouter(repo)
+	authRouter, authSrv := routers.NewAuthRouter(postgresRepo, cfg.Secret)
+	postsRouter := routers.NewPostsRouter(postgresRepo)
+	messagesRouter := routers.NewMessagesRouter(mongodbRepo)
 
 	authMiddleware := middlewares.NewAuthMiddlewareHandler(authSrv).AuthMiddleware
 
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/auth/", authRouter)
 	apiMux.Handle("/posts/", authMiddleware(postsRouter))
+	apiMux.Handle("/messages/", authMiddleware(messagesRouter))
 
 	handler := middlewares.LoggerMiddleware(logger)(
 		middlewares.GlobalMiddleware(

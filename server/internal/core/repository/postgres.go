@@ -6,7 +6,6 @@ import (
 	stderr "errors"
 	"time"
 
-	"github.com/skrpld/NearBeee/internal/core/database/mongodb"
 	"github.com/skrpld/NearBeee/internal/core/database/postgres"
 	"github.com/skrpld/NearBeee/internal/core/models/entities"
 	"github.com/skrpld/NearBeee/pkg/errors"
@@ -16,20 +15,18 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type NearBeeeRepository struct {
+type PostgresRepository struct {
 	ctx        context.Context
 	postgresDB *postgres.PostgresDB
-	mongoDB    *mongodb.MongoDB
 }
 
-func NewNearBeeeRepository(postgresDB *postgres.PostgresDB, mongoDB *mongodb.MongoDB) *NearBeeeRepository {
-	return &NearBeeeRepository{
+func NewPostgresRepository(postgresDB *postgres.PostgresDB) *PostgresRepository {
+	return &PostgresRepository{
 		postgresDB: postgresDB,
-		mongoDB:    mongoDB,
 	}
 }
 
-func (r *NearBeeeRepository) CreateUser(email, passwordHash, refreshToken string, refreshTokenExpiryTime time.Time) (*entities.User, error) {
+func (r *PostgresRepository) CreateUser(email, passwordHash, refreshToken string, refreshTokenExpiryTime time.Time) (*entities.User, error) {
 	var user entities.User
 
 	query := `INSERT INTO users (email, password_hash, refresh_token, refresh_token_expiry_time) VALUES ($1, $2, $3, $4) RETURNING *`
@@ -47,7 +44,7 @@ func (r *NearBeeeRepository) CreateUser(email, passwordHash, refreshToken string
 	return &user, nil
 }
 
-func (r *NearBeeeRepository) GetUserByEmail(email string) (*entities.User, error) {
+func (r *PostgresRepository) GetUserByEmail(email string) (*entities.User, error) {
 	var user entities.User
 
 	query := `SELECT * FROM users WHERE email = $1`
@@ -65,7 +62,7 @@ func (r *NearBeeeRepository) GetUserByEmail(email string) (*entities.User, error
 	return &user, nil
 }
 
-func (r *NearBeeeRepository) GetUserById(userId uuid.UUID) (*entities.User, error) {
+func (r *PostgresRepository) GetUserById(userId uuid.UUID) (*entities.User, error) {
 	var user entities.User
 
 	query := `SELECT * FROM users WHERE user_id = $1`
@@ -83,7 +80,7 @@ func (r *NearBeeeRepository) GetUserById(userId uuid.UUID) (*entities.User, erro
 	return &user, nil
 }
 
-func (r *NearBeeeRepository) UpdateRefreshTokenByUserId(userId uuid.UUID, refreshToken string, refreshTokenExpiryTime time.Time) error {
+func (r *PostgresRepository) UpdateRefreshTokenByUserId(userId uuid.UUID, refreshToken string, refreshTokenExpiryTime time.Time) error {
 	query := `UPDATE users SET refresh_token = $1, refresh_token_expiry_time = $2 WHERE user_id = $3`
 
 	_, err := r.postgresDB.Exec(query, refreshToken, refreshTokenExpiryTime, userId)
@@ -96,7 +93,7 @@ func (r *NearBeeeRepository) UpdateRefreshTokenByUserId(userId uuid.UUID, refres
 	return nil
 }
 
-func (r *NearBeeeRepository) CreatePost(userId uuid.UUID, title, content, idempotencyKey string, latitude, longitude float64) (*entities.Post, error) {
+func (r *PostgresRepository) CreatePost(userId uuid.UUID, title, content, idempotencyKey string, latitude, longitude float64) (*entities.Post, error) {
 	var post entities.Post
 
 	query := `INSERT INTO posts (user_id, title, content, idempotency_key, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`
@@ -114,11 +111,11 @@ func (r *NearBeeeRepository) CreatePost(userId uuid.UUID, title, content, idempo
 	return &post, nil
 }
 
-func (r *NearBeeeRepository) GetPostsByUserId(userId uuid.UUID, count int64) ([]*entities.Post, error) {
+func (r *PostgresRepository) GetPostsByUserId(userId uuid.UUID, count int64) ([]*entities.Post, error) {
 	var posts []*entities.Post
 
 	query := `SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`
-	rows, err := r.postgresDB.Query(query, userId, checkLimit(count))
+	rows, err := r.postgresDB.Query(query, userId, parsePostgresLimit(count))
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
 			return nil, errors.ErrExpiredToken
@@ -144,7 +141,7 @@ func (r *NearBeeeRepository) GetPostsByUserId(userId uuid.UUID, count int64) ([]
 	return posts, nil
 }
 
-func (r *NearBeeeRepository) GetPostsByLocation(latitude, longitude, radius float64, count int64) ([]*entities.Post, error) {
+func (r *PostgresRepository) GetPostsByLocation(latitude, longitude, radius float64, count int64) ([]*entities.Post, error) {
 	var posts []*entities.Post
 
 	query := `SELECT * FROM posts
@@ -152,7 +149,7 @@ func (r *NearBeeeRepository) GetPostsByLocation(latitude, longitude, radius floa
 		ORDER BY calculate_distance($1, $2, latitude, longitude) 
 		LIMIT $4`
 
-	rows, err := r.postgresDB.Query(query, latitude, longitude, radius, checkLimit(count))
+	rows, err := r.postgresDB.Query(query, latitude, longitude, radius, parsePostgresLimit(count))
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
 			return nil, errors.ErrInvalidCoords
@@ -178,7 +175,7 @@ func (r *NearBeeeRepository) GetPostsByLocation(latitude, longitude, radius floa
 	return posts, nil
 }
 
-func (r *NearBeeeRepository) GetPostByPostId(postId, userId uuid.UUID) (*entities.Post, error) {
+func (r *PostgresRepository) GetPostByPostId(postId, userId uuid.UUID) (*entities.Post, error) {
 	var post entities.Post
 
 	query := `SELECT * FROM posts WHERE post_id = $1 AND user_id = $2`
@@ -198,7 +195,7 @@ func (r *NearBeeeRepository) GetPostByPostId(postId, userId uuid.UUID) (*entitie
 	return &post, nil
 }
 
-func (r *NearBeeeRepository) UpdatePostById(post *entities.Post) (*entities.Post, error) {
+func (r *PostgresRepository) UpdatePostById(post *entities.Post) (*entities.Post, error) {
 	var newPost entities.Post
 
 	query := `UPDATE posts SET title = $1, content = $2 WHERE post_id = $3 AND user_id = $4 RETURNING *`
@@ -218,7 +215,7 @@ func (r *NearBeeeRepository) UpdatePostById(post *entities.Post) (*entities.Post
 	return &newPost, nil
 }
 
-func (r *NearBeeeRepository) DeletePostById(postId, userId uuid.UUID) error {
+func (r *PostgresRepository) DeletePostById(postId, userId uuid.UUID) error {
 	query := `DELETE FROM posts WHERE post_id = $1 AND user_id = $2`
 
 	_, err := r.postgresDB.Exec(query, postId, userId)
@@ -232,9 +229,9 @@ func (r *NearBeeeRepository) DeletePostById(postId, userId uuid.UUID) error {
 	return nil
 }
 
-func checkLimit(count int64) interface{} {
-	if count < 1 {
+func parsePostgresLimit(limit int64) any {
+	if limit < 1 {
 		return nil
 	}
-	return count
+	return limit
 }

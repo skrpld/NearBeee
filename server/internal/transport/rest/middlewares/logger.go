@@ -10,7 +10,7 @@ import (
 	"github.com/skrpld/NearBeee/pkg/errors"
 )
 
-//Потом стоит переделать
+//TODO: Потом стоит переделать
 
 func LoggerMiddleware(zapLogger logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
