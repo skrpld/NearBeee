@@ -22,8 +22,11 @@ type ZapLogger struct {
 }
 
 func NewLogger(cfg LoggerConfig) (Logger, error) {
-	_ = os.Mkdir(cfg.LogFilePath, 0755) //TODO: по рут правам проверить
-	file, err := os.OpenFile(cfg.LogFilePath+"/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	err := os.MkdirAll(cfg.LogFilePath, 0750)
+	if err != nil {
+		return nil, err
+	}
+	file, err := os.OpenFile(cfg.LogFilePath+"/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +62,6 @@ func String(key, val string) Field {
 
 func Duration(key string, val time.Duration) Field {
 	return Field(zap.Duration(key, val))
-}
-
-func Any(key string, value interface{}) Field {
-	return Field(zap.Any(key, value))
 }
 
 func Time(key string, val time.Time) Field {
