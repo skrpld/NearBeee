@@ -61,7 +61,7 @@ var (
 	ErrInvalidToken                = NewHttpError(errors.New("invalid token"), http.StatusUnauthorized)
 	ErrExpiredToken                = NewHttpError(errors.New("expired token"), http.StatusUnauthorized)
 	ErrIdempotencyKeyAlreadyExists = NewHttpError(errors.New("idempotency key already exists"), http.StatusBadRequest)
-	ErrInvalidPostId               = NewHttpError(errors.New("invalid post id"), http.StatusBadRequest)
+	ErrInvalidTopicId              = NewHttpError(errors.New("invalid topic id"), http.StatusBadRequest)
 	ErrNoPermissions               = NewHttpError(errors.New("no permissions"), http.StatusForbidden)
 	ErrInvalidFormType             = NewHttpError(errors.New("invalid form type"), http.StatusBadRequest)
 	ErrInvalidCoords               = NewHttpError(errors.New("invalid coordinates"), http.StatusBadRequest)

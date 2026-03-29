@@ -27,9 +27,9 @@ func NewMongodbRepository(mongoDB *mongodb.MongoDB) *MongodbRepository {
 
 const msgCollectionName = "messages"
 
-func (r *MongodbRepository) CreateMessage(ctx context.Context, postId, userId uuid.UUID, content string) (*entities.Message, error) {
+func (r *MongodbRepository) CreateMessage(ctx context.Context, topicId, userId uuid.UUID, content string) (*entities.Message, error) {
 	newMsg := &dao.Message{
-		PostId:    postId,
+		TopicId:   topicId,
 		UserId:    userId,
 		Content:   content,
 		CreatedAt: currentTimeUTC(),
@@ -89,13 +89,13 @@ func (r *MongodbRepository) GetMessageByUserId(ctx context.Context, userId uuid.
 	return response, nil
 }
 
-func (r *MongodbRepository) GetMessagesByPostId(ctx context.Context, postId uuid.UUID, count int64) ([]*entities.Message, error) {
+func (r *MongodbRepository) GetMessagesByTopicId(ctx context.Context, topicId uuid.UUID, count int64) ([]*entities.Message, error) {
 	opts := options.Find().
 		SetLimit(parseMongoLimit(count)).
 		SetSort(bson.M{"created_at": -1})
 
 	result, err := r.mongoDB.Collection(msgCollectionName).
-		Find(ctx, bson.M{"post_id": postId}, opts)
+		Find(ctx, bson.M{"topic_id": topicId}, opts)
 	if err != nil {
 		return nil, err
 	}

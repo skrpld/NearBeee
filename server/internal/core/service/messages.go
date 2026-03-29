@@ -11,10 +11,10 @@ import (
 )
 
 type MessagesRepository interface {
-	CreateMessage(ctx context.Context, postId, userId uuid.UUID, content string) (*entities.Message, error)
+	CreateMessage(ctx context.Context, topicId, userId uuid.UUID, content string) (*entities.Message, error)
 	GetMessageByMessageId(ctx context.Context, messageId bson.ObjectID) (*entities.Message, error)
 	GetMessageByUserId(ctx context.Context, userId uuid.UUID, count int64) ([]*entities.Message, error)
-	GetMessagesByPostId(ctx context.Context, postId uuid.UUID, count int64) ([]*entities.Message, error)
+	GetMessagesByTopicId(ctx context.Context, topicId uuid.UUID, count int64) ([]*entities.Message, error)
 	UpdateMessageById(ctx context.Context, messageId bson.ObjectID, userId uuid.UUID, content string) (*entities.Message, error)
 	DeleteMessageById(ctx context.Context, messageId bson.ObjectID, userId uuid.UUID) error
 }
@@ -28,12 +28,12 @@ func NewMessagesService(repo MessagesRepository) *MessagesService {
 }
 
 func (s *MessagesService) CreateMessage(ctx context.Context, rows *dto.CreateMessageRequest) (*dto.CreateMessageResponse, error) {
-	postId, err := uuid.Parse(rows.PostId)
+	topicId, err := uuid.Parse(rows.TopicId)
 	if err != nil {
-		return nil, errors.ErrInvalidPostId
+		return nil, errors.ErrInvalidTopicId
 	}
 
-	message, err := s.repo.CreateMessage(ctx, postId, rows.UserId, rows.Content)
+	message, err := s.repo.CreateMessage(ctx, topicId, rows.UserId, rows.Content)
 	if err != nil {
 		return nil, err
 	}
@@ -76,18 +76,18 @@ func (s *MessagesService) GetMessageByUserId(ctx context.Context, rows *dto.GetM
 	return &response, nil
 }
 
-func (s *MessagesService) GetMessagesByPostId(ctx context.Context, rows *dto.GetMessagesByPostIdRequest) (*dto.GetMessagesByPostIdResponse, error) {
-	postId, err := uuid.Parse(rows.PostId)
+func (s *MessagesService) GetMessagesByTopicId(ctx context.Context, rows *dto.GetMessagesByTopicIdRequest) (*dto.GetMessagesByTopicIdResponse, error) {
+	topicId, err := uuid.Parse(rows.TopicId)
 	if err != nil {
-		return nil, errors.ErrInvalidPostId
+		return nil, errors.ErrInvalidTopicId
 	}
 
-	messages, err := s.repo.GetMessagesByPostId(ctx, postId, rows.Count)
+	messages, err := s.repo.GetMessagesByTopicId(ctx, topicId, rows.Count)
 	if err != nil {
 		return nil, err
 	}
 
-	response := dto.GetMessagesByPostIdResponse{
+	response := dto.GetMessagesByTopicIdResponse{
 		Messages: messages,
 	}
 

@@ -14,7 +14,7 @@ type MessagesService interface {
 	CreateMessage(ctx context.Context, rows *dto.CreateMessageRequest) (*dto.CreateMessageResponse, error)
 	GetMessageByMessageId(ctx context.Context, rows *dto.GetMessageByMessageIdRequest) (*dto.GetMessageByMessageIdResponse, error)
 	GetMessageByUserId(ctx context.Context, rows *dto.GetMessageByUserIdRequest) (*dto.GetMessageByUserIdResponse, error)
-	GetMessagesByPostId(ctx context.Context, rows *dto.GetMessagesByPostIdRequest) (*dto.GetMessagesByPostIdResponse, error)
+	GetMessagesByTopicId(ctx context.Context, rows *dto.GetMessagesByTopicIdRequest) (*dto.GetMessagesByTopicIdResponse, error)
 	UpdateMessageById(ctx context.Context, rows *dto.UpdateMessageByIdRequest) (*dto.UpdateMessageByIdResponse, error)
 	DeleteMessageById(ctx context.Context, rows *dto.DeleteMessageByIdRequest) (*dto.DeleteMessageByIdResponse, error)
 }
@@ -48,8 +48,8 @@ func (c *MessagesController) GetMessage(r *http.Request) (any, error) {
 	switch web.FormType(r.FormValue(web.FormValue)) {
 	case web.UserForm:
 		return c.GetMessageByUserId(r)
-	case web.PostForm:
-		return c.GetMessagesByPostId(r)
+	case web.TopicForm:
+		return c.GetMessagesByTopicId(r)
 	case web.MessageForm, web.NullForm:
 		return c.GetMessageByMessageId(r)
 	default:
@@ -82,14 +82,14 @@ func (c *MessagesController) GetMessageByUserId(r *http.Request) (any, error) {
 	return c.messagesSrv.GetMessageByUserId(r.Context(), &request)
 }
 
-func (c *MessagesController) GetMessagesByPostId(r *http.Request) (any, error) {
-	var request dto.GetMessagesByPostIdRequest
+func (c *MessagesController) GetMessagesByTopicId(r *http.Request) (any, error) {
+	var request dto.GetMessagesByTopicIdRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.messagesSrv.GetMessagesByPostId(r.Context(), &request)
+	return c.messagesSrv.GetMessagesByTopicId(r.Context(), &request)
 }
 
 func (c *MessagesController) UpdateMessageById(r *http.Request) (any, error) {

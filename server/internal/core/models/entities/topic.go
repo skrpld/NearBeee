@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type Post struct {
-	PostId         uuid.UUID `json:"post_id"`
+type Topic struct {
+	TopicId        uuid.UUID `json:"topic_id"`
 	UserId         uuid.UUID `json:"user_id"`
 	Title          string    `json:"title"`
 	Content        string    `json:"content"`

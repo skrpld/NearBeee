@@ -28,8 +28,8 @@ func NewPostgresRepository(postgresDB *postgres.PostgresDB) *PostgresRepository 
 }
 
 const (
-	usersTableName = "users"
-	postsTableName = "posts"
+	usersTableName  = "users"
+	topicsTableName = "topics"
 )
 
 func (r *PostgresRepository) CreateUser(email, passwordHash, refreshToken string, refreshTokenExpiryTime time.Time) (*entities.User, error) {
@@ -101,14 +101,14 @@ func (r *PostgresRepository) UpdateRefreshTokenByUserId(userId uuid.UUID, refres
 	return nil
 }
 
-func (r *PostgresRepository) CreatePost(userId uuid.UUID, title, content, idempotencyKey string, latitude, longitude float64) (*entities.Post, error) {
-	var post entities.Post
+func (r *PostgresRepository) CreateTopic(userId uuid.UUID, title, content, idempotencyKey string, latitude, longitude float64) (*entities.Topic, error) {
+	var topic entities.Topic
 
 	query := fmt.Sprintf(`INSERT INTO %s (user_id, title, content, idempotency_key, latitude, longitude)
-			VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, postsTableName)
+			VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, topicsTableName)
 
 	err := r.postgresDB.QueryRow(query, userId, title, content, idempotencyKey, latitude, longitude).
-		Scan(&post.PostId, &post.UserId, &post.Title, &post.Content, &post.IdempotencyKey, &post.Latitude, &post.Longitude, &post.CreatedAt, &post.UpdatedAt)
+		Scan(&topic.TopicId, &topic.UserId, &topic.Title, &topic.Content, &topic.IdempotencyKey, &topic.Latitude, &topic.Longitude, &topic.CreatedAt, &topic.UpdatedAt)
 	if err != nil {
 		pgErr, ok := err.(*pq.Error)
 		if ok && pgErr.Code == "23505" { // 23505 - unique_violation
@@ -117,14 +117,14 @@ func (r *PostgresRepository) CreatePost(userId uuid.UUID, title, content, idempo
 		return nil, err
 	}
 
-	return &post, nil
+	return &topic, nil
 }
 
-func (r *PostgresRepository) GetPostsByUserId(userId uuid.UUID, count int64) ([]*entities.Post, error) {
-	var posts []*entities.Post
+func (r *PostgresRepository) GetTopicsByUserId(userId uuid.UUID, count int64) ([]*entities.Topic, error) {
+	var topics []*entities.Topic
 
 	query := fmt.Sprintf(`SELECT * FROM %s WHERE user_id = $1 
-                 ORDER BY created_at DESC LIMIT $2`, postsTableName)
+                 ORDER BY created_at DESC LIMIT $2`, topicsTableName)
 	rows, err := r.postgresDB.Query(query, userId, parsePostgresLimit(count))
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
@@ -135,29 +135,29 @@ func (r *PostgresRepository) GetPostsByUserId(userId uuid.UUID, count int64) ([]
 
 	defer rows.Close()
 	for rows.Next() {
-		var post entities.Post
+		var topic entities.Topic
 
-		err = rows.Scan(&post.PostId, &post.UserId,
-			&post.Title, &post.Content,
-			&post.IdempotencyKey, &post.Latitude,
-			&post.Longitude, &post.CreatedAt, &post.UpdatedAt)
+		err = rows.Scan(&topic.TopicId, &topic.UserId,
+			&topic.Title, &topic.Content,
+			&topic.IdempotencyKey, &topic.Latitude,
+			&topic.Longitude, &topic.CreatedAt, &topic.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 
-		posts = append(posts, &post)
+		topics = append(topics, &topic)
 	}
 
-	return posts, nil
+	return topics, nil
 }
 
-func (r *PostgresRepository) GetPostsByLocation(latitude, longitude, radius float64, count int64) ([]*entities.Post, error) {
-	var posts []*entities.Post
+func (r *PostgresRepository) GetTopicsByLocation(latitude, longitude, radius float64, count int64) ([]*entities.Topic, error) {
+	var topics []*entities.Topic
 
 	query := fmt.Sprintf(`SELECT * FROM %s
          WHERE calculate_distance($1, $2, latitude, longitude) <= $3
          ORDER BY calculate_distance($1, $2, latitude, longitude) 
-         LIMIT $4`, postsTableName)
+         LIMIT $4`, topicsTableName)
 
 	rows, err := r.postgresDB.Query(query, latitude, longitude, radius, parsePostgresLimit(count))
 	if err != nil {
@@ -169,70 +169,70 @@ func (r *PostgresRepository) GetPostsByLocation(latitude, longitude, radius floa
 
 	defer rows.Close()
 	for rows.Next() {
-		var post entities.Post
+		var topic entities.Topic
 
-		err = rows.Scan(&post.PostId, &post.UserId,
-			&post.Title, &post.Content,
-			&post.IdempotencyKey, &post.Latitude,
-			&post.Longitude, &post.CreatedAt, &post.UpdatedAt)
+		err = rows.Scan(&topic.TopicId, &topic.UserId,
+			&topic.Title, &topic.Content,
+			&topic.IdempotencyKey, &topic.Latitude,
+			&topic.Longitude, &topic.CreatedAt, &topic.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 
-		posts = append(posts, &post)
+		topics = append(topics, &topic)
 	}
 
-	return posts, nil
+	return topics, nil
 }
 
-func (r *PostgresRepository) GetPostByPostId(postId uuid.UUID) (*entities.Post, error) {
-	var post entities.Post
+func (r *PostgresRepository) GetTopicByTopicId(topicId uuid.UUID) (*entities.Topic, error) {
+	var topic entities.Topic
 
-	query := fmt.Sprintf(`SELECT * FROM %s WHERE post_id = $1`, postsTableName)
-	err := r.postgresDB.QueryRow(query, postId).
-		Scan(&post.PostId, &post.UserId,
-			&post.Title, &post.Content,
-			&post.IdempotencyKey, &post.Latitude,
-			&post.Longitude, &post.CreatedAt, &post.UpdatedAt)
+	query := fmt.Sprintf(`SELECT * FROM %s WHERE topic_id = $1`, topicsTableName)
+	err := r.postgresDB.QueryRow(query, topicId).
+		Scan(&topic.TopicId, &topic.UserId,
+			&topic.Title, &topic.Content,
+			&topic.IdempotencyKey, &topic.Latitude,
+			&topic.Longitude, &topic.CreatedAt, &topic.UpdatedAt)
 
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrInvalidPostId
+			return nil, errors.ErrInvalidTopicId
 		}
 		return nil, err
 	}
 
-	return &post, nil
+	return &topic, nil
 }
 
-func (r *PostgresRepository) UpdatePostById(title, content string, postId, userId uuid.UUID) (*entities.Post, error) {
-	var post entities.Post
+func (r *PostgresRepository) UpdateTopicById(title, content string, topicId, userId uuid.UUID) (*entities.Topic, error) {
+	var topic entities.Topic
 
 	query := fmt.Sprintf(`UPDATE %s SET title = $1, content = $2 
-          WHERE post_id = $3 AND user_id = $4 RETURNING *`, postsTableName)
+          WHERE topic_id = $3 AND user_id = $4 RETURNING *`, topicsTableName)
 	//TODO: по хорошему добавить проверку на доступ к посту (и месаги) а не просто инвалид пост ид
-	err := r.postgresDB.QueryRow(query, title, content, postId, userId).
-		Scan(&post.PostId, &post.UserId, &post.Title,
-			&post.Content, &post.IdempotencyKey,
-			&post.Latitude, &post.Longitude,
-			&post.CreatedAt, &post.UpdatedAt)
+	err := r.postgresDB.QueryRow(query, title, content, topicId, userId).
+		Scan(&topic.TopicId, &topic.UserId, &topic.Title,
+			&topic.Content, &topic.IdempotencyKey,
+			&topic.Latitude, &topic.Longitude,
+			&topic.CreatedAt, &topic.UpdatedAt)
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrInvalidPostId
+			return nil, errors.ErrInvalidTopicId
 		}
 		return nil, err
 	}
 
-	return &post, nil
+	return &topic, nil
 }
 
-func (r *PostgresRepository) DeletePostById(postId, userId uuid.UUID) error {
-	query := fmt.Sprintf(`DELETE FROM %s WHERE post_id = $1 AND user_id = $2`, postsTableName)
+func (r *PostgresRepository) DeleteTopicById(topicId, userId uuid.UUID) error {
+	query := fmt.Sprintf(`DELETE FROM %s WHERE topic_id = $1 AND user_id = $2`, topicsTableName)
 
-	result, err := r.postgresDB.Exec(query, postId, userId)
+	result, err := r.postgresDB.Exec(query, topicId, userId)
 	if err != nil {
 		if stderr.Is(err, sql.ErrNoRows) {
-			return errors.ErrInvalidPostId
+			return errors.ErrInvalidTopicId
 		}
 		return err
 	}
@@ -242,7 +242,7 @@ func (r *PostgresRepository) DeletePostById(postId, userId uuid.UUID) error {
 		return err
 	}
 	if countRows != 1 {
-		return errors.ErrInvalidPostId
+		return errors.ErrInvalidTopicId
 	}
 
 	return nil

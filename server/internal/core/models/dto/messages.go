@@ -7,7 +7,7 @@ import (
 
 type CreateMessageRequest struct {
 	MessageId string    `json:"-"`
-	PostId    string    `json:"post_id"`
+	TopicId   string    `json:"topic_id"`
 	UserId    uuid.UUID `json:"-"`
 	Content   string    `json:"content"`
 }
@@ -32,11 +32,11 @@ type GetMessageByUserIdResponse struct {
 	Messages []*entities.Message `json:"messages"`
 }
 
-type GetMessagesByPostIdRequest struct {
-	PostId string `json:"post_id"`
-	Count  int64  `json:"count"`
+type GetMessagesByTopicIdRequest struct {
+	TopicId string `json:"topic_id"`
+	Count   int64  `json:"count"`
 }
-type GetMessagesByPostIdResponse struct {
+type GetMessagesByTopicIdResponse struct {
 	Messages []*entities.Message `json:"messages"`
 }
 

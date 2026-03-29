@@ -5,14 +5,14 @@
       "$jsonSchema": {
         "bsonType": "object",
         "required": [
-          "post_id",
+          "topic_id",
           "user_id",
           "content",
           "created_at",
           "updated_at"
         ],
         "properties": {
-          "post_id": {
+          "topic_id": {
             "bsonType": "binData"
           },
           "user_id": {
@@ -38,10 +38,10 @@
     "indexes": [
       {
         "key": {
-          "post_id": 1,
+          "topic_id": 1,
           "created_at": -1
         },
-        "name": "idx_post_messages_chrono",
+        "name": "idx_topic_messages_chrono",
         "background": true
       },
       {
