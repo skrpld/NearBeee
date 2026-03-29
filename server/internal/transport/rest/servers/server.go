@@ -28,14 +28,14 @@ func NewHttpServer(cfg HttpServerConfig, postgresRepo *repository.PostgresReposi
 	mainMux := http.NewServeMux()
 
 	authRouter, authSrv := routers.NewAuthRouter(postgresRepo, cfg.Secret)
-	postsRouter := routers.NewPostsRouter(postgresRepo)
+	topicsRouter := routers.NewTopicsRouter(postgresRepo)
 	messagesRouter := routers.NewMessagesRouter(mongodbRepo)
 
 	authMiddleware := middlewares.NewAuthMiddlewareHandler(authSrv).AuthMiddleware
 
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/auth/", authRouter)
-	apiMux.Handle("/posts/", authMiddleware(postsRouter))
+	apiMux.Handle("/topics/", authMiddleware(topicsRouter))
 	apiMux.Handle("/messages/", authMiddleware(messagesRouter))
 
 	handler := middlewares.LoggerMiddleware(logger)(

@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     refresh_token_expiry_time TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE IF NOT EXISTS posts (
-    post_id UUID PRIMARY KEY  DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS topics (
+    topic_id UUID PRIMARY KEY  DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -27,14 +27,14 @@ CREATE TABLE IF NOT EXISTS posts (
     longitude DOUBLE PRECISION,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT fk_posts_user
+    CONSTRAINT fk_topics_user
                                  FOREIGN KEY (user_id)
                                  REFERENCES users(user_id)
                                  ON DELETE CASCADE
 );
 
-CREATE TRIGGER update_posts_modtime
-    BEFORE UPDATE ON posts
+CREATE TRIGGER update_topics_modtime
+    BEFORE UPDATE ON topics
     FOR EACH ROW
 EXECUTE FUNCTION update_modified_column();
 

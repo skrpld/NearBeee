@@ -10,7 +10,7 @@ import (
 
 type Message struct {
 	MessageId bson.ObjectID `bson:"_id,omitempty"`
-	PostId    uuid.UUID     `bson:"post_id"`
+	TopicId   uuid.UUID     `bson:"topic_id"`
 	UserId    uuid.UUID     `bson:"user_id"`
 	Content   string        `bson:"content"`
 	CreatedAt time.Time     `bson:"created_at"`
@@ -20,7 +20,7 @@ type Message struct {
 func (m *Message) ToEntity() *entities.Message {
 	return &entities.Message{
 		MessageId: m.MessageId.Hex(),
-		PostId:    m.PostId,
+		TopicId:   m.TopicId,
 		UserId:    m.UserId,
 		Content:   m.Content,
 		CreatedAt: m.CreatedAt,
