@@ -51,10 +51,11 @@ func main() {
 		return
 	}
 
-	postgresRepo := repository.NewPostgresRepository(postgresDB)
+	authRepo := repository.NewAuthRepository(postgresDB)
+	topicsRepo := repository.NewTopicsRepository(postgresDB)
 	mongodbRepo := repository.NewMongodbRepository(mongoDB)
 
-	server, err := servers.NewHttpServer(cfg.HttpServerConfig, postgresRepo, mongodbRepo, zapLogger)
+	server, err := servers.NewHttpServer(cfg.HttpServerConfig, authRepo, topicsRepo, mongodbRepo, zapLogger)
 	if err != nil {
 		zapLogger.Error("servers.NewNearBeeeServer", logger.Error(err))
 		return

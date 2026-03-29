@@ -13,7 +13,7 @@ type TopicsService interface {
 	CreateTopic(rows *dto.CreateTopicRequest) (*dto.CreateTopicResponse, error)
 	GetTopicsByUserId(rows *dto.GetTopicsByUserIdRequest) (*dto.GetTopicsByUserIdResponse, error)
 	GetTopicsByLocation(rows *dto.GetTopicsByLocationRequest) (*dto.GetTopicsByLocationResponse, error)
-	GetTopicByTopicId(rows *dto.GetTopicByTopicIdRequest) (*dto.GetTopicByTopicIdResponse, error)
+	GetTopicById(rows *dto.GetTopicByTopicIdRequest) (*dto.GetTopicByTopicIdResponse, error)
 	UpdateTopicById(rows *dto.UpdateTopicByIdRequest) (*dto.UpdateTopicByIdResponse, error)
 	DeleteTopicById(rows *dto.DeleteTopicByIdRequest) (*dto.DeleteTopicResponse, error)
 }
@@ -49,7 +49,7 @@ func (c *TopicsController) GetTopics(r *http.Request) (any, error) {
 	case web.LocationForm:
 		return c.GetTopicsByLocation(r)
 	case web.TopicForm, web.NullForm:
-		return c.GetTopicByTopicId(r)
+		return c.GetTopicById(r)
 	default:
 		return nil, errors.ErrInvalidFormType
 	}
@@ -82,7 +82,7 @@ func (c *TopicsController) GetTopicsByLocation(r *http.Request) (any, error) {
 	return c.topicsSrv.GetTopicsByLocation(&request)
 }
 
-func (c *TopicsController) GetTopicByTopicId(r *http.Request) (any, error) {
+func (c *TopicsController) GetTopicById(r *http.Request) (any, error) {
 	var request dto.GetTopicByTopicIdRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *TopicsController) GetTopicByTopicId(r *http.Request) (any, error) {
 
 	request.TopicId = r.PathValue(web.TopicPathValue)
 
-	return c.topicsSrv.GetTopicByTopicId(&request)
+	return c.topicsSrv.GetTopicById(&request)
 }
 
 func (c *TopicsController) UpdateTopicById(r *http.Request) (any, error) {

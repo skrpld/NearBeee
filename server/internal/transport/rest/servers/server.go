@@ -24,11 +24,11 @@ type HttpServer struct {
 	logger logger.Logger
 }
 
-func NewHttpServer(cfg HttpServerConfig, postgresRepo *repository.PostgresRepository, mongodbRepo *repository.MongodbRepository, logger logger.Logger) (*HttpServer, error) {
+func NewHttpServer(cfg HttpServerConfig, authRepo *repository.AuthRepository, topicsRepo *repository.TopicsRepository, mongodbRepo *repository.MongodbRepository, logger logger.Logger) (*HttpServer, error) {
 	mainMux := http.NewServeMux()
 
-	authRouter, authSrv := routers.NewAuthRouter(postgresRepo, cfg.Secret)
-	topicsRouter := routers.NewTopicsRouter(postgresRepo)
+	authRouter, authSrv := routers.NewAuthRouter(authRepo, cfg.Secret)
+	topicsRouter := routers.NewTopicsRouter(topicsRepo)
 	messagesRouter := routers.NewMessagesRouter(mongodbRepo)
 
 	authMiddleware := middlewares.NewAuthMiddlewareHandler(authSrv).AuthMiddleware

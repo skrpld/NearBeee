@@ -9,7 +9,7 @@ import (
 	"github.com/skrpld/NearBeee/internal/transport/rest/web"
 )
 
-func NewTopicsRouter(repo *repository.PostgresRepository) *http.ServeMux {
+func NewTopicsRouter(repo *repository.TopicsRepository) *http.ServeMux {
 	srv := service.NewTopicsService(repo)
 	controller := handlers.NewTopicsController(srv)
 	router := http.NewServeMux()
