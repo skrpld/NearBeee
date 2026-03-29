@@ -9,7 +9,7 @@ import (
 	"github.com/skrpld/NearBeee/internal/transport/rest/web"
 )
 
-func NewAuthRouter(repo *repository.PostgresRepository, secret string) (*http.ServeMux, *service.AuthService) {
+func NewAuthRouter(repo *repository.AuthRepository, secret string) (*http.ServeMux, *service.AuthService) {
 	srv := service.NewAuthService(repo, secret)
 	controller := handlers.NewAuthController(srv)
 	router := http.NewServeMux()

@@ -12,7 +12,7 @@ type TopicsRepository interface {
 	CreateTopic(userId uuid.UUID, title, content, idempotencyKey string, latitude, longitude float64) (*entities.Topic, error)
 	GetTopicsByUserId(userId uuid.UUID, count int64) ([]*entities.Topic, error)
 	GetTopicsByLocation(latitude, longitude, radius float64, count int64) ([]*entities.Topic, error)
-	GetTopicByTopicId(topicId uuid.UUID) (*entities.Topic, error)
+	GetTopicById(topicId uuid.UUID) (*entities.Topic, error)
 	UpdateTopicById(title, content string, topicId, userId uuid.UUID) (*entities.Topic, error)
 	DeleteTopicById(topicId, userId uuid.UUID) error
 }
@@ -64,13 +64,13 @@ func (s *TopicsService) GetTopicsByLocation(rows *dto.GetTopicsByLocationRequest
 	return &response, nil
 }
 
-func (s *TopicsService) GetTopicByTopicId(rows *dto.GetTopicByTopicIdRequest) (*dto.GetTopicByTopicIdResponse, error) {
+func (s *TopicsService) GetTopicById(rows *dto.GetTopicByTopicIdRequest) (*dto.GetTopicByTopicIdResponse, error) {
 	topicId, err := uuid.Parse(rows.TopicId)
 	if err != nil {
 		return nil, errors.ErrInvalidTopicId
 	}
 
-	topic, err := s.repo.GetTopicByTopicId(topicId)
+	topic, err := s.repo.GetTopicById(topicId)
 	if err != nil {
 		return nil, err
 	}
